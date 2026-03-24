@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ShiftDesk AI</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#06080f;--surface:#0d1017;--card:#111520;
+  --border:#1e2535;--border2:#252e42;
+  --blue:#4c8bf5;--purple:#8b5cf6;--green:#22d3a0;--amber:#f59e0b;--red:#f43f5e;
+  --text:#dde3f0;--muted:#5a6580;--dim:#2a3148;
+  --va1:#4c8bf5;--va2:#a78bfa;--va3:#22d3a0;
+  --morning:#f59e0b;--evening:#f97316;--night:#8b5cf6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;min-height:100vh;}
+
+/* ── SHARED HEADER ── */
+.hdr{padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-size:15px;}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.3px;}
+.brand-tag{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+.hdr-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 12px;}
+.mode-badge{font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;font-family:'JetBrains Mono',monospace;}
+.mode-mgr{background:rgba(76,139,245,.15);color:var(--blue);border:1px solid rgba(76,139,245,.3);}
+.mode-va{background:rgba(34,211,160,.15);color:var(--green);border:1px solid rgba(34,211,160,.3);}
+
+/* ══════════════════════════════════
+   MANAGER VIEW
+══════════════════════════════════ */
+#mgrView{display:none;}
+.mgr-wrap{display:grid;grid-template-columns:276px 1fr;min-height:calc(100vh - 57px);}
+
+/* sidebar */
+.side{background:var(--surface);border-right:1px solid var(--border);padding:18px 14px;display:flex;flex-direction:column;gap:15px;overflow-y:auto;}
+.slabel{font-size:10px;font-weight:600;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.va-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.va-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+.vdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.flabel{font-size:11px;color:var(--muted);margin-bottom:2px;}
+.finput{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;padding:6px 10px;outline:none;transition:border-color .2s;}
+.finput:focus{border-color:var(--blue);}
+.finput option{background:var(--card);}
+.trow{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.ucounts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+.ubox{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 5px;text-align:center;}
+.ubox input{width:100%;background:transparent;border:none;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;text-align:center;outline:none;}
+.ubox span{font-size:10px;color:var(--muted);display:block;margin-top:1px;}
+.ubox-a{border-color:rgba(34,211,160,.25);}
+.ubox-s{border-color:rgba(245,158,11,.25);}
+.ubox-i{border-color:rgba(244,63,94,.2);}
+.ctx-box{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:9px;padding:9px 11px;}
+.ctx-box textarea{width:100%;background:transparent;border:none;color:var(--text);font-family:'Outfit',sans-serif;font-size:12px;line-height:1.6;resize:none;outline:none;}
+
+/* api key row */
+.apirow{display:flex;flex-direction:column;gap:4px;}
+.apirow input{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;padding:7px 10px;outline:none;transition:border-color .2s;}
+.apirow input:focus{border-color:var(--blue);}
+.api-hint{font-size:10px;color:var(--muted);}
+.api-hint a{color:var(--blue);text-decoration:none;}
+.api-ok{font-size:10px;color:var(--green);display:none;}
+
+.gbtn{width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),var(--purple));border:none;border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.gbtn:hover{opacity:.88;}
+.gbtn:active{transform:scale(.97);}
+.gbtn:disabled{opacity:.35;cursor:not-allowed;}
+
+/* main area */
+.main{padding:22px 26px;overflow-y:auto;}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:12px;text-align:center;color:var(--muted);}
+.empty-ico{font-size:44px;opacity:.2;}
+.empty h3{font-size:16px;font-weight:600;color:var(--dim);}
+.empty p{font-size:12px;max-width:300px;line-height:1.7;}
+
+/* share bar — appears after generation */
+.share-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:22px;}
+.share-bar-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+.share-links{display:flex;flex-direction:column;gap:8px;}
+.share-row{display:flex;align-items:center;gap:8px;}
+.share-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.share-name{font-size:13px;font-weight:600;min-width:130px;}
+.share-link-box{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:7px;padding:6px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.copy-link-btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border2);background:var(--card);color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.copy-link-btn:hover{border-color:var(--blue);color:var(--blue);}
+.copy-link-btn.done{border-color:var(--green);color:var(--green);}
+
+/* tabs + panels */
+.ag-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;}
+.ag-title{font-size:18px;font-weight:700;}
+.ag-meta{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.tabs{display:flex;gap:5px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+.tab{padding:6px 14px;border-radius:7px;border:1px solid var(--border);cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);background:var(--card);transition:all .2s;}
+.tab.on{border-color:transparent;}
+.tab[data-v="1"].on{background:rgba(76,139,245,.18);color:var(--va1);border-color:rgba(76,139,245,.3);}
+.tab[data-v="2"].on{background:rgba(167,139,250,.18);color:var(--va2);border-color:rgba(167,139,250,.3);}
+.tab[data-v="3"].on{background:rgba(34,211,160,.18);color:var(--va3);border-color:rgba(34,211,160,.3);}
+.vpanel{display:none;}
+.vpanel.on{display:block;}
+
+/* ══════════════════════════════════
+   VA VIEW (shared view)
+══════════════════════════════════ */
+#vaView{display:none;}
+.va-view-wrap{max-width:720px;margin:0 auto;padding:24px 20px;}
+
+/* VA greeting card */
+.va-greeting{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:22px;display:flex;align-items:center;gap:16px;}
+.va-avatar{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.va-greeting-text h2{font-size:18px;font-weight:700;margin-bottom:3px;}
+.va-greeting-text p{font-size:13px;color:var(--muted);line-height:1.6;}
+.shift-pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:3px 10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:6px;}
+
+/* ══════════════════════════════════
+   SHARED AGENDA COMPONENTS
+══════════════════════════════════ */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;}
+.stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;}
+.stat-v{font-size:18px;font-weight:700;margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.stat-s{font-size:11px;color:var(--muted);margin-top:1px;}
+.sumbar{border-radius:8px;padding:10px 14px;margin-bottom:13px;font-size:13px;border-left:3px solid;color:var(--muted);}
+.abar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.abtn{padding:6px 13px;border-radius:7px;border:1px solid var(--border2);background:var(--card);color:var(--muted);font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.abtn:hover{border-color:var(--blue);color:var(--blue);}
+.blocks{display:flex;flex-direction:column;gap:12px;}
+.block{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.block-hdr{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.sbadge{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:3px 8px;border-radius:5px;}
+.bm{background:rgba(245,158,11,.12);color:var(--morning);}
+.be{background:rgba(249,115,22,.12);color:var(--evening);}
+.bn{background:rgba(139,92,246,.12);color:var(--night);}
+.btime{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+.bname{font-size:13px;font-weight:600;margin-left:auto;}
+.segs{padding:3px 16px 14px;}
+.seg{margin-top:12px;}
+.seg-lbl{font-size:10px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;display:flex;align-items:center;gap:5px;margin-bottom:6px;}
+.sdot{width:5px;height:5px;border-radius:50%;}
+.sa .sdot,.sa{color:var(--green);}
+.ss .sdot,.ss{color:var(--amber);}
+.si .sdot,.si{color:var(--red);}
+.sa .sdot{background:var(--green);}
+.ss .sdot{background:var(--amber);}
+.si .sdot{background:var(--red);}
+.cpill{font-size:10px;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:4px;}
+.pa{background:rgba(34,211,160,.1);color:var(--green);}
+.ps{background:rgba(245,158,11,.1);color:var(--amber);}
+.pi{background:rgba(244,63,94,.1);color:var(--red);}
+.msgcard{background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;cursor:pointer;transition:border-color .2s,transform .15s;}
+.msgcard:hover{border-color:var(--blue);transform:translateX(2px);}
+.msgcard.ok{border-color:var(--green)!important;}
+.msg-top{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:5px;}
+.chint{color:var(--dim);transition:color .2s;}
+.msgcard:hover .chint{color:var(--blue);}
+.msgcard.ok .chint{color:var(--green);}
+.msgtxt{font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;}
+
+/* error */
+.errbanner{background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.25);border-radius:8px;padding:11px 15px;color:var(--red);font-size:13px;margin-bottom:14px;}
+
+/* loader */
+.loader{position:fixed;inset:0;background:rgba(6,8,15,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;backdrop-filter:blur(4px);}
+.loader.hide{display:none;}
+.spin{width:40px;height:40px;border-radius:50%;border:3px solid var(--border2);border-top-color:var(--blue);animation:sp .75s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.ltxt{font-size:13px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.lsub{font-size:11px;color:var(--dim);}
+
+@media(max-width:700px){
+  .mgr-wrap{grid-template-columns:1fr;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .share-row{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<div class="loader hide" id="ldr">
+  <div class="spin"></div>
+  <div class="ltxt" id="ltxt">Building agendas…</div>
+  <div class="lsub">Writing messages for each VA</div>
+</div>
+
+<!-- ══ SHARED HEADER ══ -->
+<header class="hdr">
+  <div class="brand">
+    <div class="brand-icon">📋</div>
+    <div>
+      <div class="brand-name">ShiftDesk AI</div>
+      <div class="brand-tag" id="hdrTag">VA Agenda Generator</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-date" id="hdrDate"></div>
+    <div class="mode-badge mode-mgr" id="modeBadge">MANAGER</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════
+     MANAGER VIEW
+══════════════════════════════════ -->
+<div id="mgrView">
+  <div class="mgr-wrap">
+    <aside class="side">
+
+      <div>
+        <div class="slabel">API Key <span style="color:var(--green);font-size:9px;font-weight:400;letter-spacing:0">(saved in your browser)</span></div>
+        <div class="apirow">
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="password" id="apiKey" placeholder="sk-ant-api03-…" oninput="saveKey(this.value)" style="flex:1"/>
+            <button onclick="toggleKeyVis()" id="keyToggle" style="background:var(--card);border:1px solid var(--border2);border-radius:7px;color:var(--muted);padding:6px 10px;cursor:pointer;font-size:12px;white-space:nowrap;">👁</button>
+          </div>
+          <div class="api-hint">Get yours at <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> · <span style="color:var(--green)" id="apiOk" style="display:none">✓ Saved</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">VA 1 — Page</div>
+        <div class="va-card" style="border-left:3px solid var(--va1)">
+          <div class="va-head"><div class="vdot" style="background:var(--va1)"></div>VA 1</div>
+          <div><div class="flabel">Page name</div><input class="finput" id="n1" value="ESS"/></div>
+          <div><div class="flabel">Shift</div>
+            <div class="trow"><input class="finput" type="time" id="s1" value="09:00"/><input class="finput" type="time" id="e1" value="17:00"/></div></div>
+          <div><div class="flabel">Tone</div>
+            <select class="finput" id="t1"><option>Friendly &amp; warm</option><option>Professional</option><option>Energetic &amp; casual</option><option>Empathetic</option></select></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">VA 2 — Page</div>
+        <div class="va-card" style="border-left:3px solid var(--va2)">
+          <div class="va-head"><div class="vdot" style="background:var(--va2)"></div>VA 2</div>
+          <div><div class="flabel">Page name</div><input class="finput" id="n2" value="KSS"/></div>
+          <div><div class="flabel">Shift</div>
+            <div class="trow"><input class="finput" type="time" id="s2" value="14:00"/><input class="finput" type="time" id="e2" value="22:00"/></div></div>
+          <div><div class="flabel">Tone</div>
+            <select class="finput" id="t2"><option>Friendly &amp; warm</option><option>Professional</option><option selected>Energetic &amp; casual</option><option>Empathetic</option></select></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">VA 3 — Page</div>
+        <div class="va-card" style="border-left:3px solid var(--va3)">
+          <div class="va-head"><div class="vdot" style="background:var(--va3)"></div>VA 3</div>
+          <div><div class="flabel">Page name</div><input class="finput" id="n3" value="HOL"/></div>
+          <div><div class="flabel">Shift</div>
+            <div class="trow"><input class="finput" type="time" id="s3" value="20:00"/><input class="finput" type="time" id="e3" value="04:00"/></div></div>
+          <div><div class="flabel">Tone</div>
+            <select class="finput" id="t3"><option>Friendly &amp; warm</option><option>Professional</option><option>Energetic &amp; casual</option><option selected>Empathetic</option></select></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">Today's User Counts</div>
+        <div class="ucounts">
+          <div class="ubox ubox-a"><input type="number" id="ca" value="47" min="0"/><span>🟢 Active</span></div>
+          <div class="ubox ubox-s"><input type="number" id="cs" value="83" min="0"/><span>🟡 Semi</span></div>
+          <div class="ubox ubox-i"><input type="number" id="ci" value="124" min="0"/><span>🔴 Inactive</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">Platform</div>
+        <div class="ctx-box">
+          <textarea class="finput" id="plat" rows="2" style="background:transparent;border:none;padding:0;resize:none">Digital entertainment subscriptions – movies, shows &amp; live content. Monthly &amp; weekly packages.</textarea>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">Today's Special Offer</div>
+        <input class="finput" id="offer" value="Weekend special: 2 months for price of 1" placeholder="e.g. 30% off monthly plan…"/>
+      </div>
+
+      <button class="gbtn" id="gbtn" onclick="go()">✦ Generate &amp; Create VA Links</button>
+    </aside>
+
+    <main class="main">
+      <div class="empty" id="emptyEl">
+        <div class="empty-ico">📬</div>
+        <h3>Ready to generate</h3>
+        <p>Fill in your VA details, add your API key, then hit Generate. Each VA will get their own shareable link showing only their agenda.</p>
+      </div>
+
+      <div id="agEl" style="display:none">
+        <div class="ag-hdr">
+          <div class="ag-title">Today's Agendas</div>
+          <div class="ag-meta" id="agMeta"></div>
+        </div>
+
+        <!-- Share links box -->
+        <div class="share-bar" id="shareBar">
+          <div class="share-bar-title">📤 Send these links to your VAs</div>
+          <div class="share-links" id="shareLinks"></div>
+        </div>
+
+        <!-- All 3 VA views for manager -->
+        <div class="tabs" id="tabsEl"></div>
+        <div id="panelsEl"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     VA VIEW (opened via link)
+══════════════════════════════════ -->
+<div id="vaView">
+  <div class="va-view-wrap" id="vaContent">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<script>
+// ── DATE ──
+const now = new Date();
+document.getElementById('hdrDate').textContent =
+  now.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+const VA_COLORS = ['var(--va1)','var(--va2)','var(--va3)'];
+const VA_HEX    = ['#4c8bf5','#a78bfa','#22d3a0'];
+const VA_EMOJIS = ['💼','🎬','🎮'];
+
+function ft(t){
+  const[h,m]=t.split(':').map(Number);
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+}
+function shiftType(h){
+  return h>=5&&h<13?'morning':h>=13&&h<20?'evening':'night';
+}
+function splitN(total,n){
+  const b=Math.floor(total/n),r=total%n;
+  return Array.from({length:n},(_,i)=>b+(i<r?1:0));
+}
+
+// ── API KEY: auto-save in browser, never re-enter ──
+const KEY_STORAGE = 'shiftdesk_apikey';
+
+function saveKey(v){
+  if(v.trim()) localStorage.setItem(KEY_STORAGE, v.trim());
+  document.getElementById('apiOk').style.display = v.startsWith('sk-ant') ? 'inline' : 'none';
+}
+function loadSavedKey(){
+  const saved = localStorage.getItem(KEY_STORAGE)||'';
+  if(saved){ document.getElementById('apiKey').value=saved; document.getElementById('apiOk').style.display='inline'; }
+}
+function toggleKeyVis(){
+  const inp=document.getElementById('apiKey');
+  inp.type = inp.type==='password'?'text':'password';
+}
+
+// ── ROUTING ──
+// URL hash format:  #va=1&data=BASE64
+// If hash present → VA view. Otherwise → Manager view.
+function init(){
+  const hash = window.location.hash.slice(1);
+  const params = Object.fromEntries(new URLSearchParams(hash));
+  if(params.va && params.data){
+    // VA view — no API key needed, no settings shown
+    showVAView(parseInt(params.va), params.data);
+  } else {
+    // Manager view — load saved key automatically
+    document.getElementById('mgrView').style.display='block';
+    loadSavedKey();
+  }
+}
+
+// ── GENERATE ──
+async function go(){
+  const apiKey = document.getElementById('apiKey').value.trim() || localStorage.getItem(KEY_STORAGE)||'';
+  if(!apiKey){ alert('Please enter your Anthropic API key first.'); return; }
+
+  const btn=document.getElementById('gbtn');
+  const ldr=document.getElementById('ldr');
+  const ltxt=document.getElementById('ltxt');
+  btn.disabled=true; ldr.classList.remove('hide');
+
+  const vas=[1,2,3].map(i=>({
+    id:i,
+    name:document.getElementById(`n${i}`).value||`VA ${i}`,
+    start:document.getElementById(`s${i}`).value,
+    end:document.getElementById(`e${i}`).value,
+    tone:document.getElementById(`t${i}`).value
+  }));
+
+  const totA=parseInt(document.getElementById('ca').value)||0;
+  const totS=parseInt(document.getElementById('cs').value)||0;
+  const totI=parseInt(document.getElementById('ci').value)||0;
+  const plat=document.getElementById('plat').value;
+  const offer=document.getElementById('offer').value;
+  const dateStr=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  const aArr=splitN(totA,3),sArr=splitN(totS,3),iArr=splitN(totI,3);
+  const results=[];
+
+  for(let idx=0;idx<3;idx++){
+    const va=vas[idx];
+    const sh=shiftType(parseInt(va.start));
+    const mA=aArr[idx],mS=sArr[idx],mI=iArr[idx];
+    ltxt.textContent=`Writing agenda for ${va.name}…`;
+
+    const prompt=`You are a digital marketing expert writing a Facebook Messenger shift agenda for a VA managing a digital entertainment platform page.
+
+Platform: ${plat}
+Today's Offer: ${offer||'none'}
+Date: ${dateStr}
+Page: ${va.name}
+Shift: ${ft(va.start)} to ${ft(va.end)} (${sh} shift)
+Tone: ${va.tone}
+Users assigned — Active: ${mA}, Semi-active: ${mS}, Inactive: ${mI}
+
+Write 3 time blocks for this shift. Each block has one ready-to-send message per user type.
+
+Rules:
+- Messages sound human and natural, NOT robotic or salesy
+- Tone: ${va.tone}
+- Morning = warm check-ins; Evening = gentle urgency, show activity; Night = FOMO, exclusive, urgent feel
+- Naturally include today's offer in at least one message per user type across the 3 blocks
+- Max 2-3 sentences per message
+- Casual South Asian friendly phrasing preferred
+
+Reply ONLY with raw JSON. No markdown. No explanation. Start with { end with }.
+
+Schema (exactly 3 blocks):
+{"va_summary":"string","blocks":[{"block_name":"string","time_window":"string","shift_type":"${sh}","focus":"string","active":{"goal":"string","count":${mA},"message":"string"},"semi":{"goal":"string","count":${mS},"message":"string"},"inactive":{"goal":"string","count":${mI},"message":"string"}}]}`;
+
+    try{
+      const res=await fetch('https://api.anthropic.com/v1/messages',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+      });
+      const d=await res.json();
+      if(d.error) throw new Error(d.error.message);
+      const raw=(d.content||[]).map(c=>c.text||'').join('');
+      let s=raw.replace(/```json|```/g,'').trim();
+      if(!s.startsWith('{')){const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a>-1&&b>-1)s=s.slice(a,b+1);}
+      const parsed=JSON.parse(s);
+      results.push({va,parsed,mA,mS,mI,sh});
+    }catch(e){
+      results.push({va,error:e.message,mA,mS,mI,sh});
+    }
+  }
+
+  btn.disabled=false; ldr.classList.add('hide');
+  renderManager(results,totA,totS,totI);
+}
+
+// ── ENCODE / DECODE AGENDA DATA ──
+function encodeAgenda(result){
+  const payload = JSON.stringify({
+    va: result.va,
+    parsed: result.parsed,
+    mA: result.mA,
+    mS: result.mS,
+    mI: result.mI,
+    sh: result.sh,
+    date: now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})
+  });
+  return btoa(unescape(encodeURIComponent(payload)));
+}
+function decodeAgenda(b64){
+  return JSON.parse(decodeURIComponent(escape(atob(b64))));
+}
+
+// ── BUILD VA LINK ──
+function buildVALink(idx, result){
+  const base = window.location.href.split('#')[0];
+  const data = encodeAgenda(result);
+  return `${base}#va=${idx+1}&data=${data}`;
+}
+
+// ── RENDER MANAGER VIEW ──
+function renderManager(results, totA, totS, totI){
+  document.getElementById('emptyEl').style.display='none';
+  document.getElementById('agEl').style.display='block';
+  document.getElementById('agMeta').textContent=
+    `${now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})} · ${totA+totS+totI} total users`;
+
+  // Share links
+  document.getElementById('shareLinks').innerHTML = results.map((r,i)=>{
+    if(r.error) return `<div class="share-row"><div class="share-dot" style="background:${VA_HEX[i]}"></div><div class="share-name" style="color:${VA_HEX[i]}">${r.va.name}</div><div class="errbanner" style="margin:0;padding:6px 12px;">Error: ${r.error}</div></div>`;
+    const link = buildVALink(i, r);
+    return `<div class="share-row">
+      <div class="share-dot" style="background:${VA_HEX[i]}"></div>
+      <div class="share-name" style="color:${VA_HEX[i]}">${r.va.name}</div>
+      <div class="share-link-box" title="${link}">${link}</div>
+      <button class="copy-link-btn" onclick="copyLink(this,'${encodeURIComponent(link)}')">Copy link</button>
+    </div>`;
+  }).join('');
+
+  // Tabs
+  document.getElementById('tabsEl').innerHTML = results.map((r,i)=>`
+    <div class="tab ${i===0?'on':''}" data-v="${i+1}" onclick="swTab(${i+1})">
+      <span style="color:${VA_HEX[i]}">●</span> ${r.va.name}
+    </div>`).join('');
+
+  // Panels
+  document.getElementById('panelsEl').innerHTML = results.map((r,i)=>
+    `<div class="vpanel ${i===0?'on':''}" id="vp${i+1}">${buildAgendaHTML(r, i, false)}</div>`
+  ).join('');
+}
+
+// ── RENDER VA VIEW ──
+function showVAView(vaIdx, b64data){
+  document.getElementById('mgrView').style.display='none';
+  document.getElementById('vaView').style.display='block';
+  document.getElementById('modeBadge').textContent='VA VIEW';
+  document.getElementById('modeBadge').className='mode-badge mode-va';
+
+  let r;
+  try{ r = decodeAgenda(b64data); }
+  catch(e){
+    document.getElementById('vaContent').innerHTML=`<div class="errbanner">Could not load agenda. Please ask your manager to resend the link.</div>`;
+    return;
+  }
+
+  const i = vaIdx-1;
+  const color = VA_HEX[i]||VA_HEX[0];
+  const emoji = VA_EMOJIS[i]||'💼';
+
+  document.getElementById('hdrTag').textContent = r.va.name+' — Shift Agenda';
+  document.title = `ShiftDesk · ${r.va.name}`;
+
+  document.getElementById('vaContent').innerHTML = `
+    <div class="va-greeting" style="border-color:${color}33;border-left:4px solid ${color}">
+      <div class="va-avatar" style="background:${color}22;color:${color}">${emoji}</div>
+      <div class="va-greeting-text">
+        <h2>Good ${timeGreeting()}! Here's your shift agenda 👋</h2>
+        <p>Page: <strong style="color:${color}">${r.va.name}</strong> &nbsp;·&nbsp; ${r.date}</p>
+        <div class="shift-pill">🕐 ${ft(r.va.start)} – ${ft(r.va.end)} &nbsp;·&nbsp; ${r.sh} shift</div>
+      </div>
+    </div>
+    ${buildAgendaHTML(r, i, true)}
+  `;
+}
+
+function timeGreeting(){
+  const h=now.getHours();
+  return h<12?'morning':h<18?'afternoon':'evening';
+}
+
+// ── BUILD AGENDA HTML (shared by both views) ──
+function buildAgendaHTML(r, i, isVAView){
+  if(r.error) return `<div class="errbanner">⚠ Error generating agenda: ${r.error}</div>`;
+
+  const color = VA_HEX[i]||VA_HEX[0];
+  const p = r.parsed||{};
+  const shCls={morning:'bm',evening:'be',night:'bn'};
+
+  const blocks=(p.blocks||[]).map(b=>`
+    <div class="block">
+      <div class="block-hdr">
+        <span class="sbadge ${shCls[b.shift_type]||'bm'}">${b.shift_type||r.sh}</span>
+        <span class="btime">${b.time_window||''}</span>
+        <span class="bname">${b.block_name||''}</span>
+      </div>
+      <div class="segs">
+        <div style="font-size:11px;color:var(--muted);margin-top:7px;margin-bottom:2px">${b.focus||''}</div>
+
+        <div class="seg sa">
+          <div class="seg-lbl"><div class="sdot"></div>Active users <span class="cpill pa">${(b.active||{}).count||0}</span></div>
+          <div class="msgcard" onclick="cp(this)">
+            <div class="msg-top"><span>Goal: ${(b.active||{}).goal||''}</span><span class="chint">tap to copy ↗</span></div>
+            <div class="msgtxt">${(b.active||{}).message||''}</div>
+          </div>
+        </div>
+
+        <div class="seg ss">
+          <div class="seg-lbl"><div class="sdot"></div>Semi-active <span class="cpill ps">${(b.semi||{}).count||0}</span></div>
+          <div class="msgcard" onclick="cp(this)">
+            <div class="msg-top"><span>Goal: ${(b.semi||{}).goal||''}</span><span class="chint">tap to copy ↗</span></div>
+            <div class="msgtxt">${(b.semi||{}).message||''}</div>
+          </div>
+        </div>
+
+        <div class="seg si">
+          <div class="seg-lbl"><div class="sdot"></div>Inactive <span class="cpill pi">${(b.inactive||{}).count||0}</span></div>
+          <div class="msgcard" onclick="cp(this)">
+            <div class="msg-top"><span>Goal: ${(b.inactive||{}).goal||''}</span><span class="chint">tap to copy ↗</span></div>
+            <div class="msgtxt">${(b.inactive||{}).message||''}</div>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const statsHtml=`
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-l">Shift</div>
+        <div class="stat-v" style="font-size:12px;color:${color}">${ft(r.va.start)} – ${ft(r.va.end)}</div>
+        <div class="stat-s">${r.sh} shift</div>
+      </div>
+      <div class="stat">
+        <div class="stat-l">Active</div>
+        <div class="stat-v" style="color:var(--green)">${r.mA}</div>
+        <div class="stat-s">to nurture</div>
+      </div>
+      <div class="stat">
+        <div class="stat-l">Semi</div>
+        <div class="stat-v" style="color:var(--amber)">${r.mS}</div>
+        <div class="stat-s">to re-engage</div>
+      </div>
+      <div class="stat">
+        <div class="stat-l">Inactive</div>
+        <div class="stat-v" style="color:var(--red)">${r.mI}</div>
+        <div class="stat-s">to win back</div>
+      </div>
+    </div>`;
+
+  const panelId = isVAView?'vaPanel':`vp${i+1}`;
+
+  return `
+    ${statsHtml}
+    <div class="sumbar" style="background:${color}0d;border-color:${color}">${p.va_summary||''}</div>
+    <div class="abar">
+      <button class="abtn" onclick="cpAll('${panelId}')">📋 Copy all messages</button>
+      <button class="abtn" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="blocks" id="${panelId}">${blocks}</div>`;
+}
+
+// ── TAB SWITCH ──
+function swTab(n){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.vpanel').forEach(p=>p.classList.remove('on'));
+  document.querySelector(`.tab[data-v="${n}"]`).classList.add('on');
+  document.getElementById(`vp${n}`).classList.add('on');
+}
+
+// ── COPY MESSAGE ──
+function cp(el){
+  const txt=el.querySelector('.msgtxt').textContent.trim();
+  navigator.clipboard.writeText(txt).then(()=>{
+    el.classList.add('ok');
+    el.querySelector('.chint').textContent='✓ copied!';
+    setTimeout(()=>{el.classList.remove('ok');el.querySelector('.chint').textContent='tap to copy ↗';},2200);
+  });
+}
+
+// ── COPY ALL ──
+function cpAll(containerId){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  const msgs=[...el.querySelectorAll('.msgtxt')].map(e=>e.textContent.trim());
+  navigator.clipboard.writeText(msgs.join('\n\n---\n\n'));
+}
+
+// ── COPY LINK ──
+function copyLink(btn, encodedLink){
+  const link = decodeURIComponent(encodedLink);
+  navigator.clipboard.writeText(link).then(()=>{
+    btn.textContent='✓ Copied!';
+    btn.classList.add('done');
+    setTimeout(()=>{btn.textContent='Copy link';btn.classList.remove('done');},2500);
+  });
+}
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
